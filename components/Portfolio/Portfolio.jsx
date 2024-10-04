@@ -1,14 +1,42 @@
-import React, { useState } from 'react';
-import { PortfolioItem } from '../';
+import React, { useEffect, useState } from 'react';
+import { LoadingScreen, PortfolioItem } from '../';
 import { portfolioData } from './PortfolioData';
+import { usePortfolio } from '@/context/PortFolioContext';
 
 
 const Portfolio = () => {
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
+    const [loading,setLoading] = useState(true);
+    const { setPortfolioData } = usePortfolio();
+    console.log({data})
+    useEffect(() => {
+        // Fetch data from the API
+        const fetchData = async () => {
+          try {
+            const response = await fetch('/api/posts'); // Assuming your API is at /api/handler
+            if (!response.ok) {
+              throw new Error('Failed to fetch');
+            }
+            const result = await response.json();
+            setData(result);
+            setPortfolioData(result)
+            console.log({result})
+            setLoading(false)
+          } catch (err) {
+            setError(err.message);
+          }
+        };
+    
+        fetchData();
+      }, []);
+
     const [selectedFilter, setSelectedFilter] = useState('');
 
+    console.log(loading)
     const filteredProjects = selectedFilter === ''
-            ? portfolioData.projects
-            : portfolioData.projects.filter((item) => item.category === selectedFilter);
+            ? data?.projects
+            : data?.projects?.filter((item) => item.category === selectedFilter);
 
     return (
         <div className="section-box mt-4" id="portfolio">
@@ -19,7 +47,7 @@ const Portfolio = () => {
                     <p>{portfolioData.mainData.description}</p>
                 </div>
             </div>
-            <div className="filter mt-4 mt-lg-5 mb-3">
+            {loading===false ? <><div className="filter mt-4 mt-lg-5 mb-3">
                 <ul>
                     <li
                         onClick={() => setSelectedFilter('')}
@@ -41,6 +69,7 @@ const Portfolio = () => {
             <div className="row g-4 portfolio-grid">
                 {filteredProjects.map((item, index) => (
                     <PortfolioItem
+                        id = {item._id}
                         key={index}
                         imageSrc={item.imageSrc}
                         category={item.category}
@@ -48,7 +77,7 @@ const Portfolio = () => {
                         slug={item.slug}
                     />
                 ))}
-            </div>
+            </div></>: <></> }
         </div>
     )
 }

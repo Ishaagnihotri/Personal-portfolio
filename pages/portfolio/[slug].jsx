@@ -1,12 +1,18 @@
-
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import { usePortfolio } from '@/context/PortFolioContext';
+import { useRouter } from 'next/router';
 import { BackgroundImages, Header, Lightbox, PortfolioNavigation } from '@/components';
-import { portfolioData } from '@/components/Portfolio/PortfolioData';
 
-const PortfolioPage = ({ project }) => {
+const PortfolioPage = () => {
+    const router = useRouter();
+    const { id } = router.query;  // Get the query parameter 'id'
+    
+    const { portfolioData } = usePortfolio();  // Get the portfolio data from the context
+
     const [lightboxImage, setLightboxImage] = useState(null);
+    const [project, setProject] = useState(null); // Initialize as null
 
     const openLightbox = (image) => {
         setLightboxImage(image);
@@ -15,6 +21,25 @@ const PortfolioPage = ({ project }) => {
     const closeLightbox = () => {
         setLightboxImage(null);
     };
+
+    useEffect(() => {
+        // Check local storage for project data
+        const storedProject = localStorage.getItem(`project_${id}`);
+        if (storedProject) {
+            setProject(JSON.parse(storedProject)); // Set project from local storage
+        } else if (portfolioData && id) {
+            const foundProject = portfolioData?.projects.find(item => item._id === id); // Adjust this based on your data structure
+            if (foundProject) {
+                setProject(foundProject);
+                localStorage.setItem(`project_${id}`, JSON.stringify(foundProject)); // Store in local storage
+            }
+        }
+    }, [portfolioData, id]);
+
+
+    if (!project) {
+        return <div>Loading...</div>; // Render a loading state while the project is being fetched
+    }
 
     return (
         <>
@@ -49,7 +74,7 @@ const PortfolioPage = ({ project }) => {
                                         <h6 className="mono-heading mb-0">Duration:</h6>
                                         <p>{project.duration}</p>
                                     </div>
-                                </div>{/* end row */}
+                                </div>
                                 <div className="mt-4">
                                     <h1>{project.projectTitle}</h1>
                                     <p>{project.description}</p>
@@ -61,64 +86,31 @@ const PortfolioPage = ({ project }) => {
                                 </div>
                                 <div className="row g-4 mt-2">
                                     <div className="col-12">
-                                        <Image className="border-radius" src={project.mainImage} alt={project.projectTitle} placeholder="blur" />
+                                        {/* <Image className="border-radius" src={project.mainImage} alt={project.projectTitle} placeholder="blur" /> */}
                                     </div>
-                                    {project.images.map((item, index) => (
-                                        <div
-                                            className="col-12 col-xl-6"
-                                            key={index}
-                                            onClick={() => openLightbox(item.image)}
-                                        >
-                                            <div className="lightbox-image-box border-radius" >
-                                                <Image src={item.image} alt={project.projectTitle} placeholder="blur" />
-                                                <i className="bi bi-arrows-fullscreen"></i>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>{/* end section-box */}
-                            </div>{/* end section-box */}
-                            {/* end Project Content */}
+                                    
+                                    <div style={{ height: '800px' }}>
+    <iframe
+        src={project.website_url}
+        style={{ width: '100%', height: '100%', border: 'none' }} // Optional: makes the iframe responsive
+        title="Project Website"
+        allowFullScreen // Allows full-screen functionality if applicable
+    />
+</div>
+
+                                 
+                                </div>
+                            </div>
                         </div>
                         {lightboxImage && (
                             <Lightbox image={lightboxImage} closeLightbox={closeLightbox} />
                         )}
                     </div>
-                </div> {/* end main row */}
-                {/*Background Vertical lines  */}
+                </div> 
                 <BackgroundImages />
             </div>
         </>
     )
 }
 
-export async function getStaticPaths() {
-    // Generate paths for all your blog projects
-    const paths = portfolioData.projects.map((project) => ({
-        params: { slug: project.slug },
-    }));
-
-    return {
-        paths,
-        fallback: false,
-    };
-}
-
-export async function getStaticProps({ params }) {
-    const slug = params.slug;
-
-    // Search for the blog project with the matching slug
-    const project = portfolioData.projects.find((project) => project.slug === slug);
-
-    if (!project) {
-        return {
-            notFound: true,
-        };
-    }
-
-    return {
-        props: {
-            project,
-        },
-    };
-}
-export default PortfolioPage
+export default PortfolioPage;

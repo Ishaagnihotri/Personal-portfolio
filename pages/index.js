@@ -37,8 +37,8 @@ export default function Home() {
                             {/* <Blog /> */}
                             {/* Connect Section */}
                             <Connect />
-                            {/* Map Section */}
-                            <Map />
+                            {/* Map Section
+                            <Map /> */}
                         </div>
                     </div>
                 </div>  {/* end main row */}

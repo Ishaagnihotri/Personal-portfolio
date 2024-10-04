@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import '@/styles/theme.scss'
 import '@/styles/all.min.css'
+import { PortfolioProvider } from '@/context/PortFolioContext'
 
 
 export default function App({ Component, pageProps }) {
@@ -16,12 +17,15 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       {loading ? (
+        <PortfolioProvider>
         <React.Fragment>
           <Component {...pageProps} />
         </React.Fragment>
+        </PortfolioProvider>
       ) : (
         <LoadingScreen />
       )}
     </>
   )
 }
+
